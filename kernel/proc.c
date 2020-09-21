@@ -5,6 +5,7 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "defs.h"
+#include "sysinfo.h"
 
 struct cpu cpus[NCPU];
 
@@ -294,6 +295,9 @@ fork(void)
   pid = np->pid;
 
   np->state = RUNNABLE;
+
+  // trace
+  np->mask = p->mask;
 
   release(&np->lock);
 
@@ -693,3 +697,9 @@ procdump(void)
     printf("\n");
   }
 }
+
+// lab 2
+// int copyproc(struct sysinfo *info, uint64 addr) {
+//   info->nproc = 3;
+//   return 0;
+// }
