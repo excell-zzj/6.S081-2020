@@ -153,9 +153,9 @@ freeproc(struct proc *p)
   p->trapframe = 0;
   if(p->pagetable)
     proc_freepagetable(p->pagetable, p->sz);
-  p->pagetable = 0;
   if(p->kpagetable)
     proc_freekpagetable(p->kpagetable, p->sz);
+  p->pagetable = 0;
   p->kpagetable = 0;
   p->sz = 0;
   p->pid = 0;
@@ -263,9 +263,9 @@ growproc(int n)
   if(n > 0){
     if (sz + n >= CLINT/5) {
      return -1;
-   } else {
+    } else {
      uvmalloc(p->kpagetable,sz,sz+n);
-   }
+    }
     if((sz = uvmalloc(p->pagetable, sz, sz + n)) == 0) {
       return -1;
     }
@@ -500,7 +500,7 @@ scheduler(void)
         // to release its lock and then reacquire it
         // before jumping back to us.
         p->state = RUNNING;
-        w_satp(MAKE_SATP(p->kpagetable));
+        w_satp(MAKE_SATP(p->kpagetable));	
         sfence_vma();
         c->proc = p;
         swtch(&c->context, &p->context);
@@ -515,7 +515,7 @@ scheduler(void)
     }
 #if !defined (LAB_FS)
     if(found == 0) {
-      w_satp(MAKE_SATP(kernel_pagetable));
+      w_satp(MAKE_SATP(kernel_pagetable));	
       sfence_vma();
       intr_on();
       asm volatile("wfi");
@@ -730,11 +730,19 @@ procdump(void)
   }
 }
 
-void proc_freekpagetable(pagetable_t kpagetable, uint64 sz) {
-  uvmunmap(kpagetable, UART0, 1, 0);
-  uvmunmap(kpagetable, VIRTIO0, 1, 0);
-  uvmunmap(kpagetable, CLINT, 10, 0);
-  uvmunmap(kpagetable, PLIC, 400, 0);
-  uvmunmap(kpagetable, KERNBASE, (PHYSTOP - KERNBASE) / PGSIZE, 0);
-  uvmunmap(kpagetable, TRAMPOLINE, 1, 0);
+// void proc_freekpagetable(pagetable_t kpagetable, uint64 sz) {
+//   uvmunmap(kpagetable, UART0, 1, 0);
+//   uvmunmap(kpagetable, VIRTIO0, 1, 0);
+//   uvmunmap(kpagetable, CLINT, 10, 0);
+//   uvmunmap(kpagetable, PLIC, 400, 0);
+//   uvmunmap(kpagetable, KERNBASE, (PHYSTOP - KERNBASE) / PGSIZE, 0);
+//   uvmunmap(kpagetable, TRAMPOLINE, 1, 0);
+// }
+void proc_freekpagetable(pagetable_t kpagetable, uint64 sz) {	
+  uvmunmap(kpagetable, UART0, 1, 0);	
+  uvmunmap(kpagetable, VIRTIO0, 1, 0);	
+  uvmunmap(kpagetable, CLINT, 10, 0);	
+  uvmunmap(kpagetable, PLIC, 400, 0);	
+  uvmunmap(kpagetable, KERNBASE, (PHYSTOP - KERNBASE) / PGSIZE, 0);	
+  uvmunmap(kpagetable, TRAMPOLINE, 1, 0);	
 }

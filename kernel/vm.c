@@ -16,10 +16,10 @@ extern char etext[];  // kernel.ld sets this to end of kernel code.
 
 extern char trampoline[]; // trampoline.S
 
-extern int copyin_new(pagetable_t pagetable, char *dst, uint64 srcva, uint64 len);
-extern int copyinstr_new(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max);
-void vmprint(pagetable_t pagetable);
-void vmcopy(pagetable_t pagetable1, pagetable_t pagetable2);
+extern int copyin_new(pagetable_t pagetable, char *dst, uint64 srcva, uint64 len);	
+extern int copyinstr_new(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max);	
+void vmprint(pagetable_t pagetable);	
+void vmcopy(pagetable_t pagetable1, pagetable_t pagetable2);	
 void pkvmmap(uint64 va, uint64 pa, uint64 sz, int perm, pagetable_t kpagetable);
 
 /*
@@ -403,7 +403,7 @@ copyin(pagetable_t pagetable, char *dst, uint64 srcva, uint64 len)
   //   srcva = va0 + PGSIZE;
   // }
   // return 0;
-  return copyin_new(pagetable, dst, srcva, len);
+  return copyin_new(pagetable,dst,srcva,len);
 }
 
 // Copy a null-terminated string from user to kernel.
@@ -450,48 +450,48 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
   return copyinstr_new(pagetable,dst,srcva,max);
 }
 
-void vmprint(pagetable_t pagetable) {
-  printf("page table %p\n", pagetable);
-  for(int i = 0; i < PAGETABLE_READ; ++i){
-    pagetable_t PTE_1 = (pagetable_t)PTE2PA(pagetable[i]);
-    if (pagetable[i] & PTE_V) {
-      printf("..%d: pte %p pa %p\n", i, pagetable[i], PTE_1);
-      for (int j = 0; j < PAGETABLE_READ; ++j) {
-        pagetable_t PTE_2 = (pagetable_t)PTE2PA(PTE_1[j]);
-        if (PTE_1[j] & PTE_V) {
-          printf(".. ..%d: pte %p pa %p\n", j, PTE_1[j], PTE_2);
-          for (int k = 0; k < PAGETABLE_READ; ++k) {
-            pagetable_t PTE_3 = (pagetable_t)PTE2PA(PTE_2[k]);
-            if (PTE_2[k] & PTE_V) {
-              printf(".. .. ..%d: pte %p pa %p\n", k, PTE_2[k], PTE_3);
-            } 
-          }
-        }  
-      }
-    } 
-  }
+void vmprint(pagetable_t pagetable){	
+  printf("page table %p\n", pagetable);	
+  for(int i = 0; i < PAGETABLE_READ; i++){	
+    pagetable_t PTE_1 = (pagetable_t)PTE2PA(pagetable[i]);	
+    if(pagetable[i] & PTE_V){	
+      printf(" ..%d: pte %p pa %p\n", i, pagetable[i], PTE_1);	
+      for(int j = 0; j < PAGETABLE_READ; j++){	
+        pagetable_t PTE_2 = (pagetable_t)PTE2PA(PTE_1[j]);	
+        if(PTE_1[j] & PTE_V){	
+          printf(" .. ..%d: pte %p pa %p\n", j, PTE_1[j], PTE_2);	
+          for(int k = 0; k < PAGETABLE_READ; k++){	
+            pagetable_t PTE_3 = (pagetable_t)PTE2PA(PTE_2[k]);	
+            if(PTE_2[k] & PTE_V)	
+              printf(" .. .. ..%d: pte %p pa %p\n", k, PTE_2[k], PTE_3);	
+          }	
+        }	
+      }      	
+    }	
+  }	
 }
 
 // zzjTODO
-pagetable_t pkvminit() {
-  pagetable_t kpagetable = (pagetable_t) kalloc();
-  memset(kpagetable, 0, PGSIZE);
-  pkvmmap(UART0, UART0, PGSIZE, PTE_R | PTE_W, kpagetable);
-  pkvmmap(VIRTIO0, VIRTIO0, PGSIZE, PTE_R | PTE_W, kpagetable);
-  pkvmmap(CLINT, CLINT, 0x10000, PTE_R | PTE_W, kpagetable);
-  pkvmmap(PLIC, PLIC, 0x400000, PTE_R | PTE_W, kpagetable);
-  //printf("PLIC done!\n");
-  pkvmmap(KERNBASE, KERNBASE, (uint64)etext-KERNBASE, PTE_R | PTE_X, kpagetable);
-  pkvmmap((uint64)etext, (uint64)etext, PHYSTOP-(uint64)etext, PTE_R | PTE_W, kpagetable);
-  pkvmmap(TRAMPOLINE, (uint64)trampoline, PGSIZE, PTE_R | PTE_X, kpagetable);
-  return kpagetable;
+pagetable_t pkvminit() {	
+  pagetable_t kpagetable = (pagetable_t) kalloc();	
+  memset(kpagetable, 0, PGSIZE);	
+  pkvmmap(UART0, UART0, PGSIZE, PTE_R | PTE_W, kpagetable);	
+  pkvmmap(VIRTIO0, VIRTIO0, PGSIZE, PTE_R | PTE_W, kpagetable);	
+  pkvmmap(CLINT, CLINT, 0x10000, PTE_R | PTE_W, kpagetable);	
+  pkvmmap(PLIC, PLIC, 0x400000, PTE_R | PTE_W, kpagetable);	
+  pkvmmap(KERNBASE, KERNBASE, (uint64)etext-KERNBASE, PTE_R | PTE_X, kpagetable);	
+  pkvmmap((uint64)etext, (uint64)etext, PHYSTOP-(uint64)etext, PTE_R | PTE_W, kpagetable);	
+  pkvmmap(TRAMPOLINE, (uint64)trampoline, PGSIZE, PTE_R | PTE_X, kpagetable);	
+  return kpagetable;	
 }
 
-void pkvmmap(uint64 va, uint64 pa, uint64 sz, int perm, pagetable_t kpagetable) {
-  if(mappages(kpagetable, va, sz, pa, perm) != 0)
-    panic("pkvmmap");
+void pkvmmap(uint64 va, uint64 pa, uint64 sz, int perm, pagetable_t kpagetable) {	
+  if(mappages(kpagetable, va, sz, pa, perm) != 0)	
+    panic("pkvmmap");	
 }
 
+
+// copy from 1 to 2
 void vmcopy(pagetable_t pagetable1, pagetable_t pagetable2){
   int fromzero = (pagetable1 == kernel_pagetable) ? 0 : 1;
   for(int i = 0; i < PAGETABLE_LIMIT; i++){
