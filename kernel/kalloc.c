@@ -99,5 +99,6 @@ uint64 freemen(void) {
     r = r->next;
   }
   release(&kmem.lock);
+  //printf("men is %d\n", freepage);
   return (freepage << 12);
 }

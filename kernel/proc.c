@@ -714,6 +714,6 @@ uint64 unusedproc(void) {
       unused++;
     }
   }
-
+  //printf("the proc is %d\n", unused);
   return unused;
 }
