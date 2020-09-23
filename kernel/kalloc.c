@@ -83,7 +83,21 @@ kalloc(void)
 }
 
 // lab 2
-int copymem(struct sysinfo * info, uint64 addr) {
-  info->freemem = sizeof(&kmem.freelist);
-  return 0;
+// int copymem(struct sysinfo * info, uint64 addr) {
+//   info->freemem = sizeof(&kmem.freelist);
+//   return 0;
+// }
+
+uint64 freemen(void) {
+  struct run *r;
+  uint64 freepage = 0;
+  acquire(&kmem.lock);
+  r = kmem.freelist;
+  while (r)
+  {
+    freepage += 1;
+    r = r->next;
+  }
+  release(&kmem.lock);
+  return (freepage << 12);
 }
