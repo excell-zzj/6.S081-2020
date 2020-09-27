@@ -132,3 +132,18 @@ printfinit(void)
   initlock(&pr.lock, "pr");
   pr.locking = 1;
 }
+
+void backtrace() {
+  struct proc *p = myproc();
+
+  p->trapframe->s0 = r_fp();
+  
+  uint64 addr = p->trapframe->s0;
+  uint64 addr_top = PGROUNDUP(addr);
+  uint64 addr_down = PGROUNDDOWN(addr);
+  printf("backtrace: \n");
+  printf("%p\n", addr_top);
+  printf("%p\n", addr);
+  printf("%p\n", addr_down);
+  
+}
