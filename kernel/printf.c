@@ -122,6 +122,7 @@ panic(char *s)
   printf(s);
   printf("\n");
   panicked = 1; // freeze uart output from other CPUs
+  backtrace();
   for(;;)
     ;
 }
@@ -134,16 +135,27 @@ printfinit(void)
 }
 
 void backtrace() {
-  struct proc *p = myproc();
+  // struct proc *p = myproc();
 
-  p->trapframe->s0 = r_fp();
+  // p->trapframe->s0 = r_fp();
   
-  uint64 addr = p->trapframe->s0;
-  uint64 addr_top = PGROUNDUP(addr);
-  uint64 addr_down = PGROUNDDOWN(addr);
-  printf("backtrace: \n");
-  printf("%p\n", addr_top);
-  printf("%p\n", addr);
-  printf("%p\n", addr_down);
+  // uint64 addr = p->trapframe->s0;
+  // uint64 addr_top = PGROUNDUP(addr);
+  // uint64 addr_down = PGROUNDDOWN(addr);
+  // printf("backtrace: \n");
+  // printf("%p\n", addr_top);
+  // printf("%p\n", addr);
+  // printf("%p\n", addr_down);
+  uint64 fp = r_fp();
+  uint64 stop = PGROUNDUP(fp);
+  uint64 return_addr;
+
+  printf("backtrace:\n");
+  while(fp < stop) {
+    return_addr = *(uint64*)(fp-8);
+    fp = *(uint64*)(fp-16);
+    printf("%p\n", return_addr);
+  }
+
   
 }
